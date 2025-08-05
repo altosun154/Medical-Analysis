@@ -122,6 +122,27 @@ if uploaded_file is not None:
     )
     st.dataframe(results_df)
 
+
+    # Kaplan-Meier survival analysis
+    st.subheader("📉 Kaplan–Meier Survival Curve")
+    kmf = KaplanMeierFitter()
+    kmf.fit(df["time"], event_observed=df[event_col], label="Survival Probability")
+    
+    fig, ax = plt.subplots()
+    kmf.plot_survival_function(ax=ax)
+    ax.set_xlabel("Time (Months)")
+    ax.set_ylabel("Survival Probability")
+    st.pyplot(fig)
+    
+    # Cox Proportional Hazards model
+    st.subheader("📊 Cox Regression Analysis")
+    cox_df = df[["time", event_col, "Age", "Tumor_Size(cm)"]].dropna()
+    if not cox_df.empty:
+        cph = CoxPHFitter()
+        cph.fit(cox_df, duration_col="time", event_col=event_col)
+        st.write(cph.summary)
+    else:
+        st.warning("Not enough data for Cox regression.")
     # -------------------------------
     # Survival by Treatment
     # -------------------------------

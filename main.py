@@ -65,7 +65,7 @@ if uploaded_file is not None:
     # -------------------------------
     st.subheader("📈 Survival Analysis Settings")
 
-# Check if FollowUp_Months column already exists
+    # Check if FollowUp_Months column already exists
     if "FollowUp_Months" in df.columns:
         st.success("✅ Found 'FollowUp_Months' column in uploaded dataset.")
         followup_df = df.copy()
@@ -116,36 +116,76 @@ if uploaded_file is not None:
             df["FollowUp_Months"] = followup_times
             followup_df = df.copy()
 
-
-
-    # Kaplan-Meier survival analysis
-    st.subheader("📉 Kaplan–Meier Survival Curve")
-    # Create a binary event column for survival analysis
+    # STEP 1 — Create event column
     df["Death_Event"] = df["Survival_Status"].apply(
         lambda x: 1 if str(x).lower() == "deceased" else 0
     )
+    event_col = "Death_Event"  # keep consistent
     
-    # Decide which column to use for events
-    event_col = "Event_In_Period" if "Event_In_Period" in df.columns else "Death_Event"
+    # STEP 2 — Decide on follow-up times
+    if "FollowUp_Months" in df.columns:
+        # 1. Use existing column
+        df["time"] = df["FollowUp_Months"]
+    
+    elif st.checkbox("📂 Upload follow-up times separately"):
+        # 2. Merge in from another file
+        uploaded_times = st.file_uploader("Upload follow-up times CSV", type=["csv"])
+        if uploaded_times is not None:
+            df_times = pd.read_csv(uploaded_times)
+            df = df.merge(df_times, on="Patient_ID", how="left")
+            df.rename(columns={"FollowUp_Months": "time"}, inplace=True)
+    
+    elif st.checkbox("✏️ Enter time manually for each patient"):
+        # 3. Manual entry per patient
+        times = []
+        for pid in df["Patient_ID"]:
+            t = st.number_input(f"Follow-up for patient {pid} (months):", min_value=0.0, step=1.0)
+            times.append(t)
+        df["time"] = times
+    
+    else:
+        # 4. Single default for everyone
+        default_time = st.number_input(
+            "Enter single follow-up time (months):",
+            min_value=0.0, step=1.0, value=36.0
+        )
+        df["time"] = default_time
 
-    kmf = KaplanMeierFitter()
-    kmf.fit(df["FollowUp_Months"], event_observed=df[event_col], label="Survival Probability")
+
+    # Kaplan-Meier survival analysis
+    from lifelines import KaplanMeierFitter
     
+    # Kaplan–Meier Survival Analysis
+    st.subheader("📈 Kaplan–Meier Survival Curve")
+    kmf = KaplanMeierFitter()
+    
+    # Fit using the single, consistent time column
+    kmf.fit(df["time"], event_observed=df[event_col], label="Survival Probability")
+    
+    # Plot
     fig, ax = plt.subplots()
     kmf.plot_survival_function(ax=ax)
-    ax.set_xlabel("Time (Months)")
+    ax.set_title("Kaplan–Meier Survival Curve")
+    ax.set_xlabel("Time (months)")
     ax.set_ylabel("Survival Probability")
     st.pyplot(fig)
+
     
     # Cox Proportional Hazards model
-    st.subheader("📊 Cox Regression Analysis")
-    cox_df = df[["FollowUp_Months", event_col, "Age", "Tumor_Size(cm)"]].dropna()
-    if not cox_df.empty:
-        cph = CoxPHFitter()
-        cph.fit(cox_df, duration_col="time", event_col=event_col)
-        st.write(cph.summary)
-    else:
-        st.warning("Not enough data for Cox regression.")
+    from lifelines import CoxPHFitter
+
+    # Prepare Cox model data
+    cox_df = df[["time", event_col, "Age", "Tumor_Size(cm)"]].copy()
+    
+    # Fit Cox model
+    cph = CoxPHFitter()
+    cph.fit(cox_df, duration_col="time", event_col=event_col)
+    
+    # Show summary
+    st.subheader("📊 Cox Proportional Hazards Model Summary")
+    st.write(cph.summary)
+
+
     # -------------------------------
     # Survival by Treatment
     # -------------------------------

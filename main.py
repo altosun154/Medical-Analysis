@@ -9,9 +9,11 @@ from lifelines import CoxPHFitter
 
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
 st.title("🩺 Cancer Diagnosis Data Analysis Program")
+with st.sidebar:
+    st.header("Settings")
+    # File uploader
+    uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
-# File uploader
-uploaded_file = st.file_uploader("📂 Upload your CSV file", type=["csv"])
 
 if uploaded_file is not None:
     # Load CSV file skipping first row (header=1 like your original code)
@@ -63,58 +65,59 @@ if uploaded_file is not None:
     # -------------------------------
     # Survival Status vs Numeric Variables
     # -------------------------------
-    st.subheader("📈 Survival Analysis Settings")
-
-    # Check if FollowUp_Months column already exists
-    if "FollowUp_Months" in df.columns:
-        st.success("✅ Found 'FollowUp_Months' column in uploaded dataset.")
-        followup_df = df.copy()
-    
-    else:
-        st.warning("⚠ No 'FollowUp_Months' column found in dataset.")
-        followup_option = st.radio(
-            "How do you want to provide follow-up times?",
-            ["Use default time for all patients",
-             "Upload CSV with follow-up times",
-             "Manually enter per-patient times"]
-        )
-    
-        if followup_option == "Use default time for all patients":
-            default_time = st.number_input(
-                "Enter default follow-up time (months):",
-                min_value=0.0, step=1.0, value=36.0
-            )
-            df["FollowUp_Months"] = default_time
+    with st.sidebar:
+        st.subheader("📈 Survival Analysis Settings")
+        
+        # Check if FollowUp_Months column already exists
+        if "FollowUp_Months" in df.columns:
+            st.success("✅ Found 'FollowUp_Months' column in uploaded dataset.")
             followup_df = df.copy()
-    
-        elif followup_option == "Upload CSV with follow-up times":
-            uploaded_followup = st.file_uploader(
-                "Upload CSV with Patient_ID and FollowUp_Months",
-                type=["csv"]
+        
+        else:
+            st.warning("⚠ No 'FollowUp_Months' column found in dataset.")
+            followup_option = st.radio(
+                "How do you want to provide follow-up times?",
+                ["Use default time for all patients",
+                 "Upload CSV with follow-up times",
+                 "Manually enter per-patient times"]
             )
-            if uploaded_followup is not None:
-                followup_data = pd.read_csv(uploaded_followup)
-                if "Patient_ID" in followup_data.columns and "FollowUp_Months" in followup_data.columns:
-                    followup_df = df.merge(
-                        followup_data[["Patient_ID", "FollowUp_Months"]],
-                        on="Patient_ID",
-                        how="left"
-                    )
-                    st.success("✅ Follow-up times merged successfully!")
-                else:
-                    st.error("❌ CSV must contain 'Patient_ID' and 'FollowUp_Months' columns.")
-    
-        elif followup_option == "Manually enter per-patient times":
-            followup_times = []
-            for pid in df["Patient_ID"]:
-                time = st.number_input(
-                    f"Follow-up time (months) for Patient {pid}:",
-                    min_value=0.0, step=1.0, value=36.0,
-                    key=f"time_{pid}"
+        
+            if followup_option == "Use default time for all patients":
+                default_time = st.number_input(
+                    "Enter default follow-up time (months):",
+                    min_value=0.0, step=1.0, value=36.0
                 )
-                followup_times.append(time)
-            df["FollowUp_Months"] = followup_times
-            followup_df = df.copy()
+                df["FollowUp_Months"] = default_time
+                followup_df = df.copy()
+        
+            elif followup_option == "Upload CSV with follow-up times":
+                uploaded_followup = st.file_uploader(
+                    "Upload CSV with Patient_ID and FollowUp_Months",
+                    type=["csv"]
+                )
+                if uploaded_followup is not None:
+                    followup_data = pd.read_csv(uploaded_followup)
+                    if "Patient_ID" in followup_data.columns and "FollowUp_Months" in followup_data.columns:
+                        followup_df = df.merge(
+                            followup_data[["Patient_ID", "FollowUp_Months"]],
+                            on="Patient_ID",
+                            how="left"
+                        )
+                        st.success("✅ Follow-up times merged successfully!")
+                    else:
+                        st.error("❌ CSV must contain 'Patient_ID' and 'FollowUp_Months' columns.")
+        
+            elif followup_option == "Manually enter per-patient times":
+                followup_times = []
+                for pid in df["Patient_ID"]:
+                    time = st.number_input(
+                        f"Follow-up time (months) for Patient {pid}:",
+                        min_value=0.0, step=1.0, value=36.0,
+                        key=f"time_{pid}"
+                    )
+                    followup_times.append(time)
+                df["FollowUp_Months"] = followup_times
+                followup_df = df.copy()
 
     # STEP 1 — Create event column
     df["Death_Event"] = df["Survival_Status"].apply(

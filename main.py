@@ -10,19 +10,6 @@ from lifelines import CoxPHFitter
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
 st.title("🩺 Cancer Diagnosis Data Analysis Program")
 
-
-# Sidebar: Survival analysis settings
-st.sidebar.header("Survival Analysis Settings")
-survival_months = st.sidebar.number_input(
-    "Enter survival time in months",
-    min_value=1,
-    max_value=120,
-    value=36,  # Default to 36 months
-    step=1
-)
-st.sidebar.write(f"🔍 Using {survival_months} months for time-to-event analysis")
-
-
 # File uploader
 uploaded_file = st.file_uploader("📂 Upload your CSV file", type=["csv"])
 

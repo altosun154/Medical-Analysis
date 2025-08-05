@@ -13,41 +13,19 @@ with st.sidebar:
     st.header("Settings")
     # File uploader
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
-
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Column Statistics",
-    "📈 Survival Analysis",
-    "📉 Cox Regression",
-    "📂 Raw Data"
-])
-
-with tab1:
-    st.subheader("Column Statistics & Graphs")
-    # your stats + graphs code here
-
-with tab2:
-    st.subheader("Kaplan–Meier Survival Curve")
-    # your KM curve code here
-
-with tab3:
-    st.subheader("Cox Proportional Hazards Model")
-    # your Cox regression code here
-
-with tab4:
-    st.subheader("Raw Dataset Preview")
-    st.dataframe(df)
 if uploaded_file is not None:
-    # Load CSV file skipping first row (header=1 like your original code)
     df = pd.read_csv(uploaded_file, header=1)
     st.success("✅ Dataset loaded successfully!")
-
-
-    with tab1:
-        
-        # Show preview of the data
-        st.subheader("📄 Dataset Preview")
-        st.dataframe(df.head())
     
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Column Statistics",
+        "📈 Survival Analysis",
+        "📉 Cox Regression",
+        "📂 Raw Data"
+    ])
+    
+    with tab1:
+        st.subheader("Column Statistics & Graphs")
         # -------------------------------
         # Stats for each column
         # -------------------------------
@@ -85,6 +63,8 @@ if uploaded_file is not None:
                 value_counts.columns = [col, 'count']
                 fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
                 st.plotly_chart(fig, use_container_width=True)
+    
+    
 
     # -------------------------------
     # Survival Status vs Numeric Variables
@@ -151,65 +131,61 @@ if uploaded_file is not None:
                 df["time"] = times
 
 
-
-    # Kaplan-Meier survival analysis
-    from lifelines import KaplanMeierFitter
-    
-    # Kaplan–Meier Survival Analysis
-    st.subheader("📈 Kaplan–Meier Survival Curve")
-    kmf = KaplanMeierFitter()
-    
-    # Fit using the single, consistent time column
-    kmf.fit(df["time"], event_observed=df[event_col], label="Survival Probability")
-    
-    # Plot
-    fig, ax = plt.subplots()
-    kmf.plot_survival_function(ax=ax)
-    ax.set_title("Kaplan–Meier Survival Curve")
-    ax.set_xlabel("Time (months)")
-    ax.set_ylabel("Survival Probability")
-    st.pyplot(fig)
-
-    
-    # Cox Proportional Hazards model
-    from lifelines import CoxPHFitter
-
-    # Prepare Cox model data
-    cox_df = df[["time", event_col, "Age", "Tumor_Size(cm)"]].copy()
-    
-    # Fit Cox model
-    cph = CoxPHFitter()
-    cph.fit(cox_df, duration_col="time", event_col=event_col)
-    
-    # Show summary
-    st.subheader("📊 Cox Proportional Hazards Model Summary")
-    st.write(cph.summary)
-
-
-    # -------------------------------
-    # Survival by Treatment
-    # -------------------------------
-    st.subheader("📊 Survival Status by Treatment")
-    survival_by_treatment = df.groupby(["Treatment", "Survival_Status"]).size().reset_index(name="Count")
-    fig = px.bar(
-        survival_by_treatment,
-        x="Treatment",
-        y="Count",
-        color="Survival_Status",
-        barmode="group",
-        title="Survival Status by Treatment"
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    # -------------------------------
-    # Age Distribution by Survival Status
-    # -------------------------------
-    st.subheader("📊 Age Distribution by Survival Status")
-    fig = px.box(
-        df,
-        x="Survival_Status",
-        y="Age",
-        title="Age Distribution by Survival Status",
-        points="all"
-    )
-    st.plotly_chart(fig, use_container_width=True)
+        with tab2:
+            # Kaplan–Meier Survival Analysis
+            st.subheader("📈 Kaplan–Meier Survival Curve")
+            kmf = KaplanMeierFitter()
+            
+            # Fit using the single, consistent time column
+            kmf.fit(df["time"], event_observed=df[event_col], label="Survival Probability")
+            
+            # Plot
+            fig, ax = plt.subplots()
+            kmf.plot_survival_function(ax=ax)
+            ax.set_title("Kaplan–Meier Survival Curve")
+            ax.set_xlabel("Time (months)")
+            ax.set_ylabel("Survival Probability")
+            st.pyplot(fig)
+        with tab3:
+            # Prepare Cox model data
+            cox_df = df[["time", event_col, "Age", "Tumor_Size(cm)"]].copy()
+            
+            # Fit Cox model
+            cph = CoxPHFitter()
+            cph.fit(cox_df, duration_col="time", event_col=event_col)
+            
+            # Show summary
+            st.subheader("📊 Cox Proportional Hazards Model Summary")
+            st.write(cph.summary)
+        
+        with tab4:
+            st.subheader("Raw Dataset Preview")
+            st.dataframe(df)
+            # Load CSV file skipping first row (header=1 like your original code)
+            # -------------------------------
+            # Survival by Treatment
+            # -------------------------------
+            st.subheader("📊 Survival Status by Treatment")
+            survival_by_treatment = df.groupby(["Treatment", "Survival_Status"]).size().reset_index(name="Count")
+            fig = px.bar(
+                survival_by_treatment,
+                x="Treatment",
+                y="Count",
+                color="Survival_Status",
+                barmode="group",
+                title="Survival Status by Treatment"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # -------------------------------
+            # Age Distribution by Survival Status
+            # -------------------------------
+            st.subheader("📊 Age Distribution by Survival Status")
+            fig = px.box(
+                df,
+                x="Survival_Status",
+                y="Age",
+                title="Age Distribution by Survival Status",
+                points="all"
+            )
+            st.plotly_chart(fig, use_container_width=True)

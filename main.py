@@ -7,6 +7,19 @@ from scipy.stats import pointbiserialr
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
 st.title("🩺 Cancer Diagnosis Data Analysis Program")
 
+
+# Sidebar: Survival analysis settings
+st.sidebar.header("Survival Analysis Settings")
+survival_months = st.sidebar.number_input(
+    "Enter survival time in months",
+    min_value=1,
+    max_value=120,
+    value=36,  # Default to 36 months
+    step=1
+)
+st.sidebar.write(f"🔍 Using {survival_months} months for time-to-event analysis")
+
+
 # File uploader
 uploaded_file = st.file_uploader("📂 Upload your CSV file", type=["csv"])
 
@@ -66,13 +79,29 @@ if uploaded_file is not None:
         lambda x: 1 if str(x).lower() == "deceased" else 0
     )
 
+    # If follow-up time column exists, create time-based event flag
+    if "FollowUp_Months" in df.columns:
+        df["Event_In_Period"] = (
+            (df["FollowUp_Months"] <= survival_months) &
+            (df["Death_Event"] == 1)
+        ).astype(int)
+        st.info("✅ Time-to-event column found. 'Event_In_Period' created based on survival months.")
+    else:
+        st.warning("⚠ No 'FollowUp_Months' column found — skipping time-to-event calculation.")
+    
+    # Decide which event column to use
+    event_col = "Event_In_Period" if "Event_In_Period" in df.columns else "Death_Event"
+    
     results = []
     for col in df.select_dtypes(include=np.number).columns:
-        if col in ["Patient_ID", "Death_Event"]:
+        if col in ["Patient_ID", "Death_Event", "Event_In_Period"]:
             continue
-        mean_survived = df.loc[df["Death_Event"] == 0, col].mean()
-        mean_deceased = df.loc[df["Death_Event"] == 1, col].mean()
-        corr, p_value = pointbiserialr(df[col], df["Death_Event"])
+    
+        mean_survived = df.loc[df[event_col] == 0, col].mean()
+        mean_deceased = df.loc[df[event_col] == 1, col].mean()
+    
+        corr, p_value = pointbiserialr(df[col], df[event_col])
+    
         results.append([
             col,
             round(mean_survived, 2),
@@ -80,7 +109,8 @@ if uploaded_file is not None:
             round(corr, 4),
             round(p_value, 4)
         ])
-
+    
+    # Display the results table
     results_df = pd.DataFrame(
         results,
         columns=["Variable", "Mean Survived", "Mean Deceased", "Corr", "P-value"]

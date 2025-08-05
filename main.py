@@ -120,6 +120,14 @@ if uploaded_file is not None:
 
     # Kaplan-Meier survival analysis
     st.subheader("📉 Kaplan–Meier Survival Curve")
+    # Create a binary event column for survival analysis
+    df["Death_Event"] = df["Survival_Status"].apply(
+        lambda x: 1 if str(x).lower() == "deceased" else 0
+    )
+    
+    # Decide which column to use for events
+    event_col = "Event_In_Period" if "Event_In_Period" in df.columns else "Death_Event"
+
     kmf = KaplanMeierFitter()
     kmf.fit(df["FollowUp_Months"], event_observed=df[event_col], label="Survival Probability")
     

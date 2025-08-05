@@ -25,7 +25,6 @@ if uploaded_file is not None:
     ])
     
     with tab1:
-        st.subheader("Column Statistics & Graphs")
         # -------------------------------
         # Stats for each column
         # -------------------------------

@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from scipy.stats import pointbiserialr
+from lifelines import KaplanMeierFitter
+import matplotlib.pyplot as plt
+from lifelines import CoxPHFitter
 
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
 st.title("🩺 Cancer Diagnosis Data Analysis Program")
@@ -74,27 +77,28 @@ if uploaded_file is not None:
     # Survival Status vs Numeric Variables
     # -------------------------------
     st.subheader("📈 Survival Status vs Numeric Variables")
-
+    
+    # Create event indicator (auto-assume mapping here, or replace with user input)
     df["Death_Event"] = df["Survival_Status"].apply(
         lambda x: 1 if str(x).lower() == "deceased" else 0
     )
-
-    # If follow-up time column exists, create time-based event flag
-    if "FollowUp_Months" in df.columns:
-        df["Event_In_Period"] = (
-            (df["FollowUp_Months"] <= survival_months) &
-            (df["Death_Event"] == 1)
-        ).astype(int)
-        st.info("✅ Time-to-event column found. 'Event_In_Period' created based on survival months.")
-    else:
-        st.warning("⚠ No 'FollowUp_Months' column found — skipping time-to-event calculation.")
     
     # Decide which event column to use
     event_col = "Event_In_Period" if "Event_In_Period" in df.columns else "Death_Event"
     
+    # If no FollowUp_Months column, ask user for default time
+    if "FollowUp_Months" in df.columns:
+        df["time"] = df["FollowUp_Months"]
+    else:
+        default_time = st.number_input(
+            "Enter follow-up time for all patients (months):",
+            min_value=0.0, step=1.0, value=36.0
+        )
+        df["time"] = default_time
+    
     results = []
     for col in df.select_dtypes(include=np.number).columns:
-        if col in ["Patient_ID", "Death_Event", "Event_In_Period"]:
+        if col in ["Patient_ID", "Death_Event", "Event_In_Period", "time"]:
             continue
     
         mean_survived = df.loc[df[event_col] == 0, col].mean()
@@ -109,6 +113,7 @@ if uploaded_file is not None:
             round(corr, 4),
             round(p_value, 4)
         ])
+
     
     # Display the results table
     results_df = pd.DataFrame(

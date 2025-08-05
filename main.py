@@ -62,6 +62,34 @@ if uploaded_file is not None:
                 value_counts.columns = [col, 'count']
                 fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
                 st.plotly_chart(fig, use_container_width=True)
+            # -------------------------------
+            # Survival by Treatment
+            # -------------------------------
+            st.subheader("📊 Survival Status by Treatment")
+            survival_by_treatment = df.groupby(["Treatment", "Survival_Status"]).size().reset_index(name="Count")
+            fig = px.bar(
+                survival_by_treatment,
+                x="Treatment",
+                y="Count",
+                color="Survival_Status",
+                barmode="group",
+                title="Survival Status by Treatment"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # -------------------------------
+            # Age Distribution by Survival Status
+            # -------------------------------
+            st.subheader("📊 Age Distribution by Survival Status")
+            fig = px.box(
+                df,
+                x="Survival_Status",
+                y="Age",
+                title="Age Distribution by Survival Status",
+                points="all"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
     
     
 
@@ -161,30 +189,4 @@ if uploaded_file is not None:
             st.subheader("Raw Dataset Preview")
             st.dataframe(df)
             # Load CSV file skipping first row (header=1 like your original code)
-            # -------------------------------
-            # Survival by Treatment
-            # -------------------------------
-            st.subheader("📊 Survival Status by Treatment")
-            survival_by_treatment = df.groupby(["Treatment", "Survival_Status"]).size().reset_index(name="Count")
-            fig = px.bar(
-                survival_by_treatment,
-                x="Treatment",
-                y="Count",
-                color="Survival_Status",
-                barmode="group",
-                title="Survival Status by Treatment"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        
-            # -------------------------------
-            # Age Distribution by Survival Status
-            # -------------------------------
-            st.subheader("📊 Age Distribution by Survival Status")
-            fig = px.box(
-                df,
-                x="Survival_Status",
-                y="Age",
-                title="Age Distribution by Survival Status",
-                points="all"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            

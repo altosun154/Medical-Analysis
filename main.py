@@ -134,7 +134,7 @@ if uploaded_file is not None:
     # Kaplan-Meier survival analysis
     st.subheader("📉 Kaplan–Meier Survival Curve")
     kmf = KaplanMeierFitter()
-    kmf.fit(df["time"], event_observed=df[event_col], label="Survival Probability")
+    kmf.fit(df["FollowUp_Months"], event_observed=df[event_col], label="Survival Probability")
     
     fig, ax = plt.subplots()
     kmf.plot_survival_function(ax=ax)
@@ -144,7 +144,7 @@ if uploaded_file is not None:
     
     # Cox Proportional Hazards model
     st.subheader("📊 Cox Regression Analysis")
-    cox_df = df[["time", event_col, "Age", "Tumor_Size(cm)"]].dropna()
+    cox_df = df[["FollowUp_Months", event_col, "Age", "Tumor_Size(cm)"]].dropna()
     if not cox_df.empty:
         cph = CoxPHFitter()
         cph.fit(cox_df, duration_col="time", event_col=event_col)

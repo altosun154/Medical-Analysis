@@ -76,51 +76,59 @@ if uploaded_file is not None:
     # -------------------------------
     # Survival Status vs Numeric Variables
     # -------------------------------
-    st.subheader("📈 Survival Status vs Numeric Variables")
-    
-    # Create event indicator (auto-assume mapping here, or replace with user input)
-    df["Death_Event"] = df["Survival_Status"].apply(
-        lambda x: 1 if str(x).lower() == "deceased" else 0
-    )
-    
-    # Decide which event column to use
-    event_col = "Event_In_Period" if "Event_In_Period" in df.columns else "Death_Event"
-    
-    # If no FollowUp_Months column, ask user for default time
-    if "FollowUp_Months" in df.columns:
-        df["time"] = df["FollowUp_Months"]
-    else:
-        default_time = st.number_input(
-            "Enter follow-up time for all patients (months):",
-            min_value=0.0, step=1.0, value=36.0
-        )
-        df["time"] = default_time
-    
-    results = []
-    for col in df.select_dtypes(include=np.number).columns:
-        if col in ["Patient_ID", "Death_Event", "Event_In_Period", "time"]:
-            continue
-    
-        mean_survived = df.loc[df[event_col] == 0, col].mean()
-        mean_deceased = df.loc[df[event_col] == 1, col].mean()
-    
-        corr, p_value = pointbiserialr(df[col], df[event_col])
-    
-        results.append([
-            col,
-            round(mean_survived, 2),
-            round(mean_deceased, 2),
-            round(corr, 4),
-            round(p_value, 4)
-        ])
+    st.subheader("📈 Survival Analysis Settings")
 
+# Check if FollowUp_Months column already exists
+    if "FollowUp_Months" in df.columns:
+        st.success("✅ Found 'FollowUp_Months' column in uploaded dataset.")
+        followup_df = df.copy()
     
-    # Display the results table
-    results_df = pd.DataFrame(
-        results,
-        columns=["Variable", "Mean Survived", "Mean Deceased", "Corr", "P-value"]
-    )
-    st.dataframe(results_df)
+    else:
+        st.warning("⚠ No 'FollowUp_Months' column found in dataset.")
+        followup_option = st.radio(
+            "How do you want to provide follow-up times?",
+            ["Use default time for all patients",
+             "Upload CSV with follow-up times",
+             "Manually enter per-patient times"]
+        )
+    
+        if followup_option == "Use default time for all patients":
+            default_time = st.number_input(
+                "Enter default follow-up time (months):",
+                min_value=0.0, step=1.0, value=36.0
+            )
+            df["FollowUp_Months"] = default_time
+            followup_df = df.copy()
+    
+        elif followup_option == "Upload CSV with follow-up times":
+            uploaded_followup = st.file_uploader(
+                "Upload CSV with Patient_ID and FollowUp_Months",
+                type=["csv"]
+            )
+            if uploaded_followup is not None:
+                followup_data = pd.read_csv(uploaded_followup)
+                if "Patient_ID" in followup_data.columns and "FollowUp_Months" in followup_data.columns:
+                    followup_df = df.merge(
+                        followup_data[["Patient_ID", "FollowUp_Months"]],
+                        on="Patient_ID",
+                        how="left"
+                    )
+                    st.success("✅ Follow-up times merged successfully!")
+                else:
+                    st.error("❌ CSV must contain 'Patient_ID' and 'FollowUp_Months' columns.")
+    
+        elif followup_option == "Manually enter per-patient times":
+            followup_times = []
+            for pid in df["Patient_ID"]:
+                time = st.number_input(
+                    f"Follow-up time (months) for Patient {pid}:",
+                    min_value=0.0, step=1.0, value=36.0,
+                    key=f"time_{pid}"
+                )
+                followup_times.append(time)
+            df["FollowUp_Months"] = followup_times
+            followup_df = df.copy()
+
 
 
     # Kaplan-Meier survival analysis

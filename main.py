@@ -23,45 +23,71 @@ if uploaded_file is not None:
         "📉 Cox Regression",
         "📂 Raw Data"
     ])
+    st.sidebar.header("📈 Statistical Options")
+
+    stat_choices = st.sidebar.multiselect(
+        "Choose statistical summaries:",
+        ["Mean", "Median", "Std Dev", "Min", "Max"],
+        default=["Mean", "Median"]
+    )
     
+    plot_choices = st.sidebar.multiselect(
+        "Choose plots to display:",
+        ["Histogram", "Boxplot", "Bar Chart"],
+        default=["Histogram"]
+    )
+    st.sidebar.header("📈 Statistical Options")
+
+    stat_choices = st.sidebar.multiselect(
+        "Choose statistical summaries:",
+        ["Mean", "Median", "Std Dev", "Min", "Max"],
+        default=["Mean", "Median"]
+    )
+    
+    plot_choices = st.sidebar.multiselect(
+        "Choose plots to display:",
+        ["Histogram", "Boxplot", "Bar Chart"],
+        default=["Histogram"]
+    )
+    
+
     with tab1:
         # -------------------------------
         # Stats for each column
         # -------------------------------
-        st.subheader("📊 Column Statistics & Graphs")
-        for col in df.columns:
-            if col == "Patient_ID":
-                continue
-    
+        st.subheader("📊 Interactive Analysis")
+        
+        for col in selected_vars:
+            st.markdown(f"### {col}")
             if pd.api.types.is_numeric_dtype(df[col]):
-                st.markdown(f"**{col}** (Numeric)")
-                st.write(f"Count: {df[col].count()}")
-                st.write(f"Mean: {df[col].mean():.2f}")
-                st.write(f"Median: {df[col].median():.2f}")
-                st.write(f"Std Dev: {df[col].std():.2f}")
-                st.write(f"Min: {df[col].min()}")
-                st.write(f"Max: {df[col].max()}")
-    
-                # Histogram
-                fig = px.histogram(df, x=col, title=f"Histogram of {col}")
-                st.plotly_chart(fig, use_container_width=True)
-    
-                # Boxplot
-                fig = px.box(df, y=col, title=f"Boxplot of {col}")
-                st.plotly_chart(fig, use_container_width=True)
-    
+                if "Mean" in stat_choices:
+                    st.write(f"Mean: {df[col].mean():.2f}")
+                if "Median" in stat_choices:
+                    st.write(f"Median: {df[col].median():.2f}")
+                if "Std Dev" in stat_choices:
+                    st.write(f"Std Dev: {df[col].std():.2f}")
+                if "Min" in stat_choices:
+                    st.write(f"Min: {df[col].min()}")
+                if "Max" in stat_choices:
+                    st.write(f"Max: {df[col].max()}")
+        
+                if "Histogram" in plot_choices:
+                    fig = px.histogram(df, x=col, title=f"Histogram of {col}")
+                    st.plotly_chart(fig, use_container_width=True)
+        
+                if "Boxplot" in plot_choices:
+                    fig = px.box(df, y=col, title=f"Boxplot of {col}")
+                    st.plotly_chart(fig, use_container_width=True)
+        
             else:
-                st.markdown(f"**{col}** (Categorical)")
-                st.write(f"Count: {df[col].count()}")
                 st.write(f"Unique values: {df[col].nunique()}")
                 st.write(f"Most common: {df[col].mode()[0]}")
-                st.write(df[col].value_counts().head(5))
-    
-                # Bar chart
-                value_counts = df[col].value_counts().reset_index()
-                value_counts.columns = [col, 'count']
-                fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
-                st.plotly_chart(fig, use_container_width=True)
+                if "Bar Chart" in plot_choices:
+                    value_counts = df[col].value_counts().reset_index()
+                    value_counts.columns = [col, 'count']
+                    fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
+                    st.plotly_chart(fig, use_container_width=True)
+
         # -------------------------------
         # Survival by Treatment
         # -------------------------------

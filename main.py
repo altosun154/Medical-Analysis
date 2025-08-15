@@ -23,27 +23,34 @@ if uploaded_file is not None:
         "📉 Cox Regression",
         "📂 Raw Data"
     ])
-    st.sidebar.header("📈 Statistical Options")
-
-    stat_choices = st.sidebar.multiselect(
-        "Choose statistical summaries:",
-        ["Mean", "Median", "Std Dev", "Min", "Max"],
-        default=["Mean", "Median"]
-    )
-    
-    plot_choices = st.sidebar.multiselect(
-        "Choose plots to display:",
-        ["Histogram", "Boxplot", "Bar Chart"],
-        default=["Histogram"]
-    )
-    
-    selected_vars = st.sidebar.multiselect(
-    "Choose variables to compare:",
-    options=[col for col in df.select_dtypes(include=np.number).columns if col not in ["Patient_ID", "Death_Event", "Event_In_Period", "time"]],
-    key="selected_variables"
-    )
 
     with tab1:
+        st.markdown("## 🧮 Statistical Options")
+
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            stat_choices = st.multiselect(
+                "Choose statistical summaries:",
+                ["Mean", "Median", "Std Dev", "Min", "Max"],
+                default=["Mean", "Median"],
+                key="main_stat_choices"
+            )
+        
+        with col2:
+            plot_choices = st.multiselect(
+                "Choose plots to display:",
+                ["Histogram", "Box Plot", "Bar Plot"],
+                default=["Histogram"],
+                key="main_plot_choices"
+            )
+        
+        selected_vars = st.multiselect(
+            "Choose variables to compare:",
+            df.columns.drop("Patient_ID"),
+            key="main_var_choices"
+        )
+
         # -------------------------------
         # Stats for each column
         # -------------------------------

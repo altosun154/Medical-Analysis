@@ -35,7 +35,7 @@ if uploaded_file is not None:
             # -------------------------------
             # Stats for each column
             # -------------------------------
-            st.subheader("📊 Interactive Analysis")
+            st.subheader("Interactive Analysis")
             col1, col2 = st.columns(2)
             
             with col1:
@@ -91,7 +91,7 @@ if uploaded_file is not None:
                         st.plotly_chart(fig, use_container_width=True)
 # ------------------------- RIGHT: COLUMN-WISE SUMMARY -------------------------
         with col_columnwise:                
-            st.subheader("📊 Custom Variable Comparison")
+            st.subheader("Custom Variable Comparison")
     
             # Grouping variable (like Survival_Status)
             group_col = st.selectbox("Choose grouping variable:", df.select_dtypes(include='object').columns)

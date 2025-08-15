@@ -25,8 +25,10 @@ if uploaded_file is not None:
     ])
 
     with tab1:
-        st.markdown("## 🧮 Statistical Options")
-
+        # -------------------------------
+        # Stats for each column
+        # -------------------------------
+        st.subheader("📊 Interactive Analysis")
         col1, col2 = st.columns(2)
         
         with col1:
@@ -50,12 +52,6 @@ if uploaded_file is not None:
             df.columns.drop("Patient_ID"),
             key="main_var_choices"
         )
-
-        # -------------------------------
-        # Stats for each column
-        # -------------------------------
-        st.subheader("📊 Interactive Analysis")
-        
         for col in selected_vars:
             st.markdown(f"### {col}")
             if pd.api.types.is_numeric_dtype(df[col]):

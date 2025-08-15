@@ -120,69 +120,69 @@ if uploaded_file is not None:
     
 
         with tab2:
-                # -------------------------------
-    # Survival Status vs Numeric Variables
-    # -------------------------------
-    with st.sidebar:
-        st.subheader("📈 Survival Analysis Settings")
-    
-        # STEP 1 — Event indicator
-        df["Death_Event"] = df["Survival_Status"].apply(
-            lambda x: 1 if str(x).lower() == "deceased" else 0
-        )
-        event_col = "Death_Event"
-    
-        # STEP 2 — Get follow-up times
-        if "FollowUp_Months" in df.columns:
-            st.success("✅ Found 'FollowUp_Months' in uploaded dataset.")
-            df["time"] = df["FollowUp_Months"]
-    
-        else:
-            st.warning("⚠ No 'FollowUp_Months' found.")
-            followup_option = st.radio(
-                "How do you want to provide follow-up times?",
-                [
-                    "Use default time for all patients",
-                    "Upload CSV with follow-up times",
-                    "Manually enter per-patient times"
-                ]
-            )
-    
-            if followup_option == "Use default time for all patients":
-                default_time = st.number_input(
-                    "Enter default follow-up time (months):",
-                    min_value=0.0, step=1.0, value=36.0
+        # -------------------------------
+        # Survival Status vs Numeric Variables
+        # -------------------------------
+            with st.sidebar:
+                st.subheader("📈 Survival Analysis Settings")
+            
+                # STEP 1 — Event indicator
+                df["Death_Event"] = df["Survival_Status"].apply(
+                    lambda x: 1 if str(x).lower() == "deceased" else 0
                 )
-                df["time"] = default_time
-    
-            elif followup_option == "Upload CSV with follow-up times":
-                uploaded_followup = st.file_uploader(
-                    "Upload CSV with Patient_ID and FollowUp_Months",
-                    type=["csv"]
-                )
-                if uploaded_followup is not None:
-                    followup_data = pd.read_csv(uploaded_followup)
-                    if {"Patient_ID", "FollowUp_Months"}.issubset(followup_data.columns):
-                        df = df.merge(
-                            followup_data[["Patient_ID", "FollowUp_Months"]],
-                            on="Patient_ID",
-                            how="left"
-                        )
-                        df.rename(columns={"FollowUp_Months": "time"}, inplace=True)
-                        st.success("✅ Follow-up times merged successfully!")
-                    else:
-                        st.error("❌ CSV must have 'Patient_ID' and 'FollowUp_Months' columns.")
-    
-            elif followup_option == "Manually enter per-patient times":
-                times = []
-                for pid in df["Patient_ID"]:
-                    t = st.number_input(
-                        f"Follow-up for Patient {pid} (months):",
-                        min_value=0.0, step=1.0, value=36.0,
-                        key=f"time_{pid}"
+                event_col = "Death_Event"
+            
+                # STEP 2 — Get follow-up times
+                if "FollowUp_Months" in df.columns:
+                    st.success("✅ Found 'FollowUp_Months' in uploaded dataset.")
+                    df["time"] = df["FollowUp_Months"]
+            
+                else:
+                    st.warning("⚠ No 'FollowUp_Months' found.")
+                    followup_option = st.radio(
+                        "How do you want to provide follow-up times?",
+                        [
+                            "Use default time for all patients",
+                            "Upload CSV with follow-up times",
+                            "Manually enter per-patient times"
+                        ]
                     )
-                    times.append(t)
-                df["time"] = times
+            
+                    if followup_option == "Use default time for all patients":
+                        default_time = st.number_input(
+                            "Enter default follow-up time (months):",
+                            min_value=0.0, step=1.0, value=36.0
+                        )
+                        df["time"] = default_time
+            
+                    elif followup_option == "Upload CSV with follow-up times":
+                        uploaded_followup = st.file_uploader(
+                            "Upload CSV with Patient_ID and FollowUp_Months",
+                            type=["csv"]
+                        )
+                        if uploaded_followup is not None:
+                            followup_data = pd.read_csv(uploaded_followup)
+                            if {"Patient_ID", "FollowUp_Months"}.issubset(followup_data.columns):
+                                df = df.merge(
+                                    followup_data[["Patient_ID", "FollowUp_Months"]],
+                                    on="Patient_ID",
+                                    how="left"
+                                )
+                                df.rename(columns={"FollowUp_Months": "time"}, inplace=True)
+                                st.success("✅ Follow-up times merged successfully!")
+                            else:
+                                st.error("❌ CSV must have 'Patient_ID' and 'FollowUp_Months' columns.")
+            
+                    elif followup_option == "Manually enter per-patient times":
+                        times = []
+                        for pid in df["Patient_ID"]:
+                            t = st.number_input(
+                                f"Follow-up for Patient {pid} (months):",
+                                min_value=0.0, step=1.0, value=36.0,
+                                key=f"time_{pid}"
+                            )
+                            times.append(t)
+                        df["time"] = times
             # Kaplan–Meier Survival Analysis
             st.subheader("📈 Kaplan–Meier Survival Curve")
             kmf = KaplanMeierFitter()

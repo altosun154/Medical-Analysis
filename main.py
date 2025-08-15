@@ -25,95 +25,104 @@ if uploaded_file is not None:
     ])
 
     with tab1:
-        # -------------------------------
-        # Stats for each column
-        # -------------------------------
-        st.subheader("📊 Interactive Analysis")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            stat_choices = st.multiselect(
-                "Choose statistical summaries:",
-                ["Mean", "Median", "Std Dev", "Min", "Max"],
-                default=["Mean", "Median"],
-                key="main_stat_choices"
-            )
-        
-        with col2:
-            plot_choices = st.multiselect(
-                "Choose plots to display:",
-                ["Histogram", "Box Plot", "Bar Plot"],
-                default=["Histogram"],
-                key="main_plot_choices"
-            )
-        
-        selected_vars = st.multiselect(
-            "Choose variables to compare:",
-            df.columns.drop("Patient_ID"),
-            key="main_var_choices"
-        )
-        for col in selected_vars:
-            st.markdown(f"### {col}")
-            if pd.api.types.is_numeric_dtype(df[col]):
-                if "Mean" in stat_choices:
-                    st.write(f"Mean: {df[col].mean():.2f}")
-                if "Median" in stat_choices:
-                    st.write(f"Median: {df[col].median():.2f}")
-                if "Std Dev" in stat_choices:
-                    st.write(f"Std Dev: {df[col].std():.2f}")
-                if "Min" in stat_choices:
-                    st.write(f"Min: {df[col].min()}")
-                if "Max" in stat_choices:
-                    st.write(f"Max: {df[col].max()}")
-        
-                if "Histogram" in plot_choices:
-                    fig = px.histogram(df, x=col, title=f"Histogram of {col}")
-                    st.plotly_chart(fig, use_container_width=True)
-        
-                if "Boxplot" in plot_choices:
-                    fig = px.box(df, y=col, title=f"Boxplot of {col}")
-                    st.plotly_chart(fig, use_container_width=True)
-        
-            else:
-                st.write(f"Unique values: {df[col].nunique()}")
-                st.write(f"Most common: {df[col].mode()[0]}")
-                if "Bar Chart" in plot_choices:
-                    value_counts = df[col].value_counts().reset_index()
-                    value_counts.columns = [col, 'count']
-                    fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
-                    st.plotly_chart(fig, use_container_width=True)
-        st.subheader("📊 Custom Variable Comparison")
+        st.title("📊 Medical Data Analysis Dashboard")
 
-        # Grouping variable (like Survival_Status)
-        group_col = st.selectbox("Choose grouping variable:", df.select_dtypes(include='object').columns)
-        
-        # Comparison variable(s)
-        compare_vars = st.multiselect(
-            "Choose variables to compare (categorical or numeric):",
-            df.columns.drop(["Patient_ID", group_col])
-        )
-        
-        # Plot type
-        plot_type = st.radio("Choose plot type:", ["Bar Plot", "Box Plot", "Histogram"])
-        
-        # Display plots
-        for col in compare_vars:
-            st.markdown(f"### {col} by {group_col}")
+        # Split the main area into two large columns
+        col_interactive, col_columnwise = st.columns(2)
+
+# ------------------------- LEFT: INTERACTIVE ANALYSIS -------------------------
+        with col_interactive:
+            # -------------------------------
+            # Stats for each column
+            # -------------------------------
+            st.subheader("📊 Interactive Analysis")
+            col1, col2 = st.columns(2)
             
-            if plot_type == "Bar Plot" and df[col].dtype == "object":
-                fig = px.histogram(df, x=col, color=group_col, barmode='group')
-                st.plotly_chart(fig)
-        
-            elif plot_type == "Box Plot" and pd.api.types.is_numeric_dtype(df[col]):
-                fig = px.box(df, x=group_col, y=col, points="all")
-                st.plotly_chart(fig)
-        
-            elif plot_type == "Histogram" and pd.api.types.is_numeric_dtype(df[col]):
-                fig = px.histogram(df, x=col, color=group_col, barmode="overlay", opacity=0.7)
-                st.plotly_chart(fig)
-        
-            else:
-                st.warning(f"❌ {col} is not compatible with {plot_type}. Try a different plot type.")
+            with col1:
+                stat_choices = st.multiselect(
+                    "Choose statistical summaries:",
+                    ["Mean", "Median", "Std Dev", "Min", "Max"],
+                    default=["Mean", "Median"],
+                    key="main_stat_choices"
+                )
+            
+            with col2:
+                plot_choices = st.multiselect(
+                    "Choose plots to display:",
+                    ["Histogram", "Box Plot", "Bar Plot"],
+                    default=["Histogram"],
+                    key="main_plot_choices"
+                )
+            
+            selected_vars = st.multiselect(
+                "Choose variables to compare:",
+                df.columns.drop("Patient_ID"),
+                key="main_var_choices"
+            )
+            for col in selected_vars:
+                st.markdown(f"### {col}")
+                if pd.api.types.is_numeric_dtype(df[col]):
+                    if "Mean" in stat_choices:
+                        st.write(f"Mean: {df[col].mean():.2f}")
+                    if "Median" in stat_choices:
+                        st.write(f"Median: {df[col].median():.2f}")
+                    if "Std Dev" in stat_choices:
+                        st.write(f"Std Dev: {df[col].std():.2f}")
+                    if "Min" in stat_choices:
+                        st.write(f"Min: {df[col].min()}")
+                    if "Max" in stat_choices:
+                        st.write(f"Max: {df[col].max()}")
+            
+                    if "Histogram" in plot_choices:
+                        fig = px.histogram(df, x=col, title=f"Histogram of {col}")
+                        st.plotly_chart(fig, use_container_width=True)
+            
+                    if "Boxplot" in plot_choices:
+                        fig = px.box(df, y=col, title=f"Boxplot of {col}")
+                        st.plotly_chart(fig, use_container_width=True)
+            
+                else:
+                    st.write(f"Unique values: {df[col].nunique()}")
+                    st.write(f"Most common: {df[col].mode()[0]}")
+                    if "Bar Chart" in plot_choices:
+                        value_counts = df[col].value_counts().reset_index()
+                        value_counts.columns = [col, 'count']
+                        fig = px.bar(value_counts, x=col, y='count', title=f"Bar chart of {col}")
+                        st.plotly_chart(fig, use_container_width=True)
+# ------------------------- RIGHT: COLUMN-WISE SUMMARY -------------------------
+        with col_columnwise:                
+            st.subheader("📊 Custom Variable Comparison")
+    
+            # Grouping variable (like Survival_Status)
+            group_col = st.selectbox("Choose grouping variable:", df.select_dtypes(include='object').columns)
+            
+            # Comparison variable(s)
+            compare_vars = st.multiselect(
+                "Choose variables to compare (categorical or numeric):",
+                df.columns.drop(["Patient_ID", group_col])
+            )
+            
+            # Plot type
+            plot_type = st.radio("Choose plot type:", ["Bar Plot", "Box Plot", "Histogram"])
+            
+            # Display plots
+            for col in compare_vars:
+                st.markdown(f"### {col} by {group_col}")
+                
+                if plot_type == "Bar Plot" and df[col].dtype == "object":
+                    fig = px.histogram(df, x=col, color=group_col, barmode='group')
+                    st.plotly_chart(fig)
+            
+                elif plot_type == "Box Plot" and pd.api.types.is_numeric_dtype(df[col]):
+                    fig = px.box(df, x=group_col, y=col, points="all")
+                    st.plotly_chart(fig)
+            
+                elif plot_type == "Histogram" and pd.api.types.is_numeric_dtype(df[col]):
+                    fig = px.histogram(df, x=col, color=group_col, barmode="overlay", opacity=0.7)
+                    st.plotly_chart(fig)
+            
+                else:
+                    st.warning(f"❌ {col} is not compatible with {plot_type}. Try a different plot type.")
 
 
     

@@ -119,7 +119,8 @@ if uploaded_file is not None:
     
     
 
-    # -------------------------------
+        with tab2:
+                # -------------------------------
     # Survival Status vs Numeric Variables
     # -------------------------------
     with st.sidebar:
@@ -182,9 +183,6 @@ if uploaded_file is not None:
                     )
                     times.append(t)
                 df["time"] = times
-
-
-        with tab2:
             # Kaplan–Meier Survival Analysis
             st.subheader("📈 Kaplan–Meier Survival Curve")
             kmf = KaplanMeierFitter()

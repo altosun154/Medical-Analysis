@@ -36,19 +36,6 @@ if uploaded_file is not None:
         ["Histogram", "Boxplot", "Bar Chart"],
         default=["Histogram"]
     )
-    st.sidebar.header("📈 Statistical Options")
-
-    stat_choices = st.sidebar.multiselect(
-        "Choose statistical summaries:",
-        ["Mean", "Median", "Std Dev", "Min", "Max"],
-        default=["Mean", "Median"]
-    )
-    
-    plot_choices = st.sidebar.multiselect(
-        "Choose plots to display:",
-        ["Histogram", "Boxplot", "Bar Chart"],
-        default=["Histogram"]
-    )
     
 
     with tab1:

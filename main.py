@@ -37,6 +37,11 @@ if uploaded_file is not None:
         default=["Histogram"]
     )
     
+    selected_vars = st.sidebar.multiselect(
+    "Choose variables to compare:",
+    options=[col for col in df.select_dtypes(include=np.number).columns if col not in ["Patient_ID", "Death_Event", "Event_In_Period", "time"]],
+    key="selected_variables"
+    )
 
     with tab1:
         # -------------------------------

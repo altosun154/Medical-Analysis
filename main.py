@@ -236,7 +236,7 @@ if uploaded_file is not None:
                 image = Image.open(uploaded_img).convert("RGBA")
                 image_np = np.array(image)
             
-                st.image(image, caption="Original Image", use_container_width=True)  # ⚠️ use_container_width replaces deprecated use_column_width
+                st.image(image, caption="Original Image", width=True)
             
                 # Draw on canvas
                 canvas_result = st_canvas(

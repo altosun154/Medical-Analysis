@@ -6,7 +6,7 @@ from scipy.stats import pointbiserialr
 from lifelines import KaplanMeierFitter
 import matplotlib.pyplot as plt
 from lifelines import CoxPHFitter
-import streamlit_drawable_canvas as dc
+from streamlit_drawable_canvas import st_canvas
 from PIL import Image
 
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
@@ -227,33 +227,38 @@ if uploaded_file is not None:
             # Load CSV file skipping first row (header=1 like your original code)
         with tab5:
 
-            st.header("🖼️ Manual Image Segmentation")
+            st.header("🖼️ Manual PNG Image Segmentation")
             
             uploaded_img = st.file_uploader("Upload a PNG image for segmentation:", type=["png"])
-            if uploaded_img:
-                image = Image.open(uploaded_img)
-                st.image(image, caption="Original Image", use_column_width=True)
             
-                canvas_result = dc.st_canvas(
-                    fill_color="rgba(255, 0, 0, 0.3)",  # Red mask
+            if uploaded_img is not None:
+                # Load and display original image
+                image = Image.open(uploaded_img).convert("RGBA")
+                image_np = np.array(image)
+            
+                st.image(image, caption="Original Image", use_container_width=True)  # ⚠️ use_container_width replaces deprecated use_column_width
+            
+                # Draw on canvas
+                canvas_result = st_canvas(
+                    fill_color="rgba(255, 0, 0, 0.3)",  # Red mask color
                     stroke_width=2,
                     stroke_color="#FF0000",
-                    background_image=Image.open(uploaded_img).convert("RGBA"),
+                    background_image=image_np,  # ✅ NumPy array avoids internal image_to_url call
                     update_streamlit=True,
                     height=image.height,
                     width=image.width,
-                    drawing_mode="freedraw",  # Options: 'freedraw', 'rect', 'circle', etc.
-                    key="canvas",
+                    drawing_mode="freedraw",
+                    key="canvas_segmentation",
                 )
             
-                # Show output (mask)
+                # Display segmented result
                 if canvas_result.image_data is not None:
-                    st.image(canvas_result.image_data, caption="Segmented Output", use_column_width=True)
+                    st.image(canvas_result.image_data, caption="Segmented Output", use_container_width=True)
             
-                    # Optional: Save mask
+                    # Allow export
                     if st.button("📥 Download Mask Image"):
-                        mask_image = Image.fromarray(canvas_result.image_data.astype("uint8"))
-                        mask_image.save("segmented_mask.png")
-                        st.success("Mask saved as segmented_mask.png")
-
+                        result_image = Image.fromarray(canvas_result.image_data.astype("uint8"))
+                        result_image.save("segmented_output.png")
+                        st.success("✅ Mask saved as segmented_output.png")
             
+                        

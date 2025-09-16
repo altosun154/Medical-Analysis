@@ -6,6 +6,8 @@ from scipy.stats import pointbiserialr
 from lifelines import KaplanMeierFitter
 import matplotlib.pyplot as plt
 from lifelines import CoxPHFitter
+import streamlit_drawable_canvas as dc
+from PIL import Image
 
 st.set_page_config(page_title="Cancer Diagnosis Data Analysis", layout="wide")
 st.title("🩺 Cancer Diagnosis Data Analysis Program")
@@ -17,11 +19,12 @@ if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, header=1)
     st.success("✅ Dataset loaded successfully!")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Column Statistics",
         "📈 Survival Analysis",
         "📉 Cox Regression",
-        "📂 Raw Data"
+        "📂 Raw Data",
+        "💾 Upload Image"
     ])
 
     with tab1:
@@ -222,4 +225,35 @@ if uploaded_file is not None:
             st.subheader("Raw Dataset Preview")
             st.dataframe(df)
             # Load CSV file skipping first row (header=1 like your original code)
+        with tab5:
+
+            st.header("🖼️ Manual Image Segmentation")
+            
+            uploaded_img = st.file_uploader("Upload a PNG image for segmentation:", type=["png"])
+            if uploaded_img:
+                image = Image.open(uploaded_img)
+                st.image(image, caption="Original Image", use_column_width=True)
+            
+                canvas_result = dc.st_canvas(
+                    fill_color="rgba(255, 0, 0, 0.3)",  # Red mask
+                    stroke_width=2,
+                    stroke_color="#FF0000",
+                    background_image=image,
+                    update_streamlit=True,
+                    height=image.height,
+                    width=image.width,
+                    drawing_mode="freedraw",  # Options: 'freedraw', 'rect', 'circle', etc.
+                    key="canvas",
+                )
+            
+                # Show output (mask)
+                if canvas_result.image_data is not None:
+                    st.image(canvas_result.image_data, caption="Segmented Output", use_column_width=True)
+            
+                    # Optional: Save mask
+                    if st.button("📥 Download Mask Image"):
+                        mask_image = Image.fromarray(canvas_result.image_data.astype("uint8"))
+                        mask_image.save("segmented_mask.png")
+                        st.success("Mask saved as segmented_mask.png")
+
             

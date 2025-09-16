@@ -1,8 +1,5 @@
-streamlit
-pandas
-numpy
-plotly
-scipy
-lifelines
-streamlit-drawable-canvas
+streamlit>=1.32.0
+streamlit-drawable-canvas==0.8.0
 Pillow
+numpy
+pandas

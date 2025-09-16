@@ -228,22 +228,19 @@ if uploaded_file is not None:
         with tab5:
 
             st.header("🖼️ Manual PNG Image Segmentation")
-            
+
             uploaded_img = st.file_uploader("Upload a PNG image for segmentation:", type=["png"])
             
             if uploaded_img is not None:
-                # Load and display original image
                 image = Image.open(uploaded_img).convert("RGBA")
-                image_np = np.array(image)
             
-                st.image(image, caption="Original Image", width= "stretch")
+                st.image(image, caption="Original Image", width="stretch")
             
-                # Draw on canvas
                 canvas_result = st_canvas(
-                    fill_color="rgba(255, 0, 0, 0.3)",  # Red mask color
+                    fill_color="rgba(255, 0, 0, 0.3)",  # Red transparent overlay
                     stroke_width=2,
                     stroke_color="#FF0000",
-                    background_image=image_np,  # ✅ NumPy array avoids internal image_to_url call
+                    background_image=image,  # ✅ Use PIL image
                     update_streamlit=True,
                     height=image.height,
                     width=image.width,
@@ -251,14 +248,10 @@ if uploaded_file is not None:
                     key="canvas_segmentation",
                 )
             
-                # Display segmented result
                 if canvas_result.image_data is not None:
-                    st.image(canvas_result.image_data, caption="Segmented Output", use_container_width=True)
+                    st.image(canvas_result.image_data, caption="Segmented Output", width="stretch")
             
-                    # Allow export
                     if st.button("📥 Download Mask Image"):
                         result_image = Image.fromarray(canvas_result.image_data.astype("uint8"))
                         result_image.save("segmented_output.png")
                         st.success("✅ Mask saved as segmented_output.png")
-            
-                        

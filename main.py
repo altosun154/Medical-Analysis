@@ -238,7 +238,7 @@ if uploaded_file is not None:
                     fill_color="rgba(255, 0, 0, 0.3)",  # Red mask
                     stroke_width=2,
                     stroke_color="#FF0000",
-                    background_image=image,
+                    background_image=Image.open(uploaded_img).convert("RGBA"),
                     update_streamlit=True,
                     height=image.height,
                     width=image.width,

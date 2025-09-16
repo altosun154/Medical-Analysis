@@ -4,3 +4,5 @@ numpy
 plotly
 scipy
 lifelines
+streamlit-drawable-canvas
+Pillow
